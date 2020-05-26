@@ -1,0 +1,115 @@
+import random
+
+ATTEMPTS = 12  # max. number of attempts for cracking the code
+
+""" 
+This program lets the user play the game Mastermind. A hidden code is generated depending on how many digits the user
+wants to guess. A maximum of 12 attempts is given in order to guess the code, each digit taking on a value of 1-8.
+Every attempt that is put in by the user is evaluated by using red and white markers.
+A red marker indicates a correct digit at the right position in the code.
+A white marker indicates a correct digit appearing at a different position in the code.
+"""
+
+
+def main():
+    intro_text()
+    num_digits = int(input("How many digits should the code have? "))  # the user can determine the number of digits
+    print("")
+    correct_code = []  # the correct code will be stored in a list
+    backup_correct_code = []  # a backup list of the correct code will be needed later on
+    generate_random_code(num_digits, correct_code, backup_correct_code)  # generating the correct code randomly
+    # print("The original code is ", "-".join(correct_code))  # test line
+    red_compare = ["0"]  # condition for winning the game, if all digits are correct you got num_digits red markers
+    count_attempts = [0]  # counts the number of attempts
+    detonation = 0  # this variable turns to 1 in case that the user exceeds the number of attempts
+    history = "\n"  # stores the history of each attempt & its number of red and white markers
+    backup_guess = []  # backup of the digits that the user puts in for each attempt
+    red_markers_count_list = ["0"]  # counts the number of red markers per attempt
+    white_markers_count_list = ["0"]  # counts the number of white markers per attempt
+    while not int(red_compare[0]) == num_digits:  # while loop checks if the user got all digits of the game correct
+        if count_attempts[0] == ATTEMPTS:  # after the 12th attempt the user loses the game
+            detonation = 1
+            print("BAMM! The correct code was " + '"' + "-".join(backup_correct_code) + '"' + ". You failed!")
+            break
+        crack_code(num_digits, correct_code, backup_correct_code, red_compare, count_attempts, backup_guess,
+                   red_markers_count_list, white_markers_count_list)
+        history += str("In attempt " + str(count_attempts[0]) + " you entered " + "-".join(backup_guess) + str(
+            ". You got " + red_markers_count_list[0] + " red marker(s) and " + white_markers_count_list[
+                0] + " white marker(s).\n"))  # shows combination put in & number of red and white markers per attempt
+        print("\nHistory:" + history)
+        print("____________________________________________________________________________\n")
+    if detonation == 0:  # if user exits while loop & he got all digits correct, detonation will stay 0 and user wins!
+        print("You cracked the code! Congratulations! Keep on rocking it!")
+
+
+def intro_text():
+    print("ARE YOU A MASTERMIND? CRACK THE 4-DIGIT CODE IN " + str(ATTEMPTS) + " ATTEMPTS OR LESS! DIGITS RANGE FROM 1 "
+                                                                               "TO 8.\n")
+    print("A CORRECT DIGIT AT THE CORRECT POSITION IS INDICATED BY A RED MARKER, A CORRECT DIGIT AT A WRONG POSITION "
+          "BY A WHITE ONE.\n")
+    print("GOOD LUCK TO YOU \U0001F525\n")
+
+
+# the function matches the number of digits depending on how many digits the user chose for the game
+def generate_random_code(nums, cor, cor2):
+    for i in range(nums):  # a for loop generates a random number between 1 and 8 and stores it in two lists
+        random_digit = str(random.randint(1, 8))
+        cor.append(random_digit)
+        cor2.append(random_digit)
+    return cor, cor2
+
+
+def crack_code(num_digits, correct_code, backup_correct_code, compare, count, backup_guess, red_markers_count_list,
+               white_markers_count_list):
+    count_int = count[0]
+    for i in range(num_digits):
+        correct_code[i] = backup_correct_code[i]  # set correct_code equal to backup which got the unmodified version
+    guess = []  # the user input is stored in a list
+    ask_input(num_digits, guess, backup_guess)
+    for i in range(num_digits):
+        guess[i] = backup_guess[i]  # set correct_code equal to backup which got the unmodified version
+    red_count = 0
+    check_red_markers(correct_code, guess, red_markers_count_list, num_digits, red_count)
+    compare[0] = red_markers_count_list[0]
+    white_count = 0
+    check_white_markers(correct_code, guess, white_markers_count_list, num_digits, white_count)
+    count_int += 1
+    count[0] = count_int
+    return compare, count, backup_guess, red_markers_count_list, white_markers_count_list
+
+
+# asks the user for input
+def ask_input(nums, gue, gue2):  # asks the user for input and stores it in two lists
+    del gue2[:]  # deletes whatever is in gue2, otherwise it will append all digits from every attempt into a big string
+    for i in range(nums):  # for loop runs as necessary depending on how many digits the user wanted
+        ask_guess = input("Please enter the " + str(i + 1) + ". digit: ")  # asks for input
+        gue.append(ask_guess)
+        gue2.append(ask_guess)
+    return gue, gue2
+
+
+# checks how many red markers should be indicated for a given attempt
+def check_red_markers(cor, gue, red_list, num, red):
+    for i in range(num):
+        if cor[i] == gue[i]:  # for any given i we check if the digit in guess matches the one in correct_code
+            red += 1  # if so, we add one to our variable counting red markers
+            cor[i] = str("A")  # changes the digit to an "A" to avoid double counting it as a white marker
+            gue[i] = str("Z")  # changes the digit to a "Z" to avoid double counting it as a white marker
+    red_list[0] = str(red)  # number of red markers is put in red_list that returns to crack_code function
+    return cor, gue, red
+
+
+# checks how many white markers should be indicated for a given attempt
+def check_white_markers(cor, gue, white_list, num, white):
+    for i in range(num):
+        if gue[i] in cor:  # for any given i we check if the digit in guess appears in correct_code
+            white += 1  # if so, we add one to our variable counting white markers
+            index = cor.index(gue[i])  # we determine the index of the digit in correct_code
+            cor[index] = str("A")  # the digit at the determined index is set to an "A" to avoid double counting
+            gue[i] = str("Z")  # changes the digit to a "Z" to avoid double counting
+    white_list[0] = str(white)  # number of white markers is put in white_list that returns to crack_code function
+    return cor, gue, white
+
+
+if __name__ == '__main__':
+    main()
